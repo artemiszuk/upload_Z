@@ -2,7 +2,7 @@
   "name": "upload_Z",
   "description": "A Pyrogram Telegram bot to upload files",
   "keywords": [
-      "telegram",
+      "telegram"
     ],
   "repository": "https://github.com/artemiszuk/upload_Z",
   "success_url": "/",
