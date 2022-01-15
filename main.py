@@ -65,7 +65,7 @@ async def link(client, message):
         eta_time = downloader.get_eta(human=True)
         progress_str = f"File Name : {file_name} \n" +f"Progress : {prg}\n" +"Completed : " + str(int(percentage)) +"%\n" + f"Speed : {speed}\n" + f"ETA : {eta_time}"
         await app.edit_message_text(user_id, message.message_id + 2, f"{progress_str}")
-        await asyncio.sleep(3)
+        await asyncio.sleep(5)
       await app.edit_message_text(user_id, message.message_id + 2, "File Downloaded")
       f = []
       for file in os.listdir(f"{path}"):
