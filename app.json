@@ -2,7 +2,8 @@
 	"name": "upload_Z",
 	"description": "A Pyrogram Telegram bot to upload files",
 	"keywords": [
-		"telegram"
+		"telegram",
+		"media"
 	],
 	"repository": "https://github.com/artemiszuk/upload_Z",
 	"success_url": "/",
@@ -17,15 +18,15 @@
 		},
 		"BOT_TOKEN": {
 			"description": "Get this value from @BotFather"
-		},
-		"buildpacks": [{
-			"url": "heroku/python"
-		}],
-		"formation": {
-			"web": {
-				"quantity": 1,
-				"size": "free"
-			}
+		}
+	},
+	"buildpacks": [{
+		"url": "heroku/python"
+	}],
+	"formation": {
+		"web": {
+			"quantity": 1,
+			"size": "free"
 		}
 	}
 }
