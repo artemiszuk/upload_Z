@@ -5,7 +5,7 @@ This is Simple Upload bot written from scratch by me (may contain bugs as I am S
 ### Features :
 • uses pySmartDL to download files \
 • Download File from Direct Link and upload as Document \
-• more soon... \
+• more soon... 
 
 ### Deploy to Test
 Tap on [![Deploy](https://www.herokucdn.com/deploy/button.svg)](https://heroku.com/deploy)
