@@ -25,7 +25,7 @@ def is_url(url):
   try:
     result = urlparse(url)
     return all([result.scheme, result.netloc])
-  except ValueError:
+  except :
     return False
 #on getting start msg
 @app.on_message(filters.command(["start"]))
@@ -46,7 +46,7 @@ async def link(client, message):
     
     url = message.text[6:len(message.text)]  #seperate link from message
     if(is_url(url) == False):
-      await app.send_message(user_id, "Please enter valid url")
+      await app.send_message(user_id, "Some error occurred/invalid url")
       return
     text = f"Your entered link = {url}"
     await app.send_message(user_id, text,
