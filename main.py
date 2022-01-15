@@ -6,6 +6,7 @@ from urllib.parse import urlparse
 from pySmartDL import SmartDL
 import asyncio
 #from pyrogram.types import ReplyKeyboardMarkup, InlineKeyboardMarkup, InlineKeyboardButton
+os.system("python3 -m http.server & python3 ping.py &")
 
 api_id = int(os.environ.get('API_ID'))
 api_hash = os.environ.get('API_HASH')
@@ -46,7 +47,7 @@ async def link(client, message):
     
     url = message.text[6:len(message.text)]  #seperate link from message
     if(is_url(url) == False):
-      await app.send_message(user_id, "Some error occurred/invalid url")
+      await app.send_message(user_id, "Please enter valid url")
       return
     text = f"Your entered link = {url}"
     await app.send_message(user_id, text,
@@ -54,34 +55,40 @@ async def link(client, message):
     await app.send_message(user_id, "File Downloading")
     path = f"download/{user_id}/{message.message_id}"
     if os.path.isdir(f"download/{user_id}") == False:
-      os.makedirs(path)
-      downloader = SmartDL(url, path, progress_bar=False)
-      downloader.start(blocking=False)
-      file_name = os.path.basename(url)
-      while not downloader.isFinished():
-        percentage = downloader.get_progress() * 100
-        prg = progress(int(percentage),100)
-        speed = downloader.get_speed(human=True)
-        eta_time = downloader.get_eta(human=True)
-        progress_str = f"File Name : {file_name} \n" +f"Progress : {prg}\n" +"Completed : " + str(int(percentage)) +"%\n" + f"Speed : {speed}\n" + f"ETA : {eta_time}"
-        await app.edit_message_text(user_id, message.message_id + 2, f"{progress_str}")
-        await asyncio.sleep(5)
-      await app.edit_message_text(user_id, message.message_id + 2, "File Downloaded")
-      f = []
-      for file in os.listdir(f"{path}"):
-          f.append(
-              file
-          )  #  will make a list of all files downloaded according to user_id
-      filepath = f"{path}/{f[0]}"
-      await app.edit_message_text(user_id, message.message_id + 2,
-                            "Please wait ...file is being uploaded")
+      try:
+        os.makedirs(path)
+        downloader = SmartDL(url, path, progress_bar=False)
+        downloader.start(blocking=False)
+        file_name = os.path.basename(url)
+        while not downloader.isFinished():
+          percentage = downloader.get_progress() * 100
+          prg = progress(int(percentage),100)
+          speed = downloader.get_speed(human=True)
+          eta_time = downloader.get_eta(human=True)
+          progress_str = f"File Name : {file_name} \n" +f"Progress : {prg}\n" +"Completed : " + str(int(percentage)) +"%\n" + f"Speed : {speed}\n" + f"ETA : {eta_time}"
+          await app.edit_message_text(user_id, message.message_id + 2, f"{progress_str}")
+          await asyncio.sleep(3)
+        await app.edit_message_text(user_id, message.message_id + 2, "File Downloaded")
+        f = []
+        for file in os.listdir(f"{path}"):
+            f.append(
+                file
+            )  #  will make a list of all files downloaded according to user_id
+        filepath = f"{path}/{f[0]}"
+        await app.edit_message_text(user_id, message.message_id + 2,
+                              "Please wait ...file is being uploaded")
 
-      await app.send_chat_action(user_id, "upload_document")
-      msg_toedit = await app.get_messages(user_id,message.message_id + 2)
-      await app.send_document(user_id, filepath,progress=progress)
-      await app.delete_messages(user_id, message.message_id + 2)
-      filepath = f"download/{user_id}/"
-      shutil.rmtree(filepath)  #remove user_id folder from downloads
+        await app.send_chat_action(user_id, "upload_document")
+        msg_toedit = await app.get_messages(user_id,message.message_id + 2)
+        await app.send_document(user_id, filepath,progress=progress)
+        await app.delete_messages(user_id, message.message_id + 2)
+        filepath = f"download/{user_id}/"
+        shutil.rmtree(filepath) #remove user_id folder from downloads
+      except Exception as e:
+        e_text = str(e)
+        shutil.rmtree(f"download/{user_id}/")
+        await app.delete_messages(user_id, message.message_id + 2)
+        await app.send_message(user_id, e_text)
 
 
 app.run()
