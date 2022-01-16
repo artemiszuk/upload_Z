@@ -6,7 +6,6 @@ from urllib.parse import urlparse
 from pySmartDL import SmartDL
 import asyncio
 #from pyrogram.types import ReplyKeyboardMarkup, InlineKeyboardMarkup, InlineKeyboardButton
-os.system("python3 -m http.server & python3 ping.py &")
 
 api_id = int(os.environ.get('API_ID'))
 api_hash = os.environ.get('API_HASH')
