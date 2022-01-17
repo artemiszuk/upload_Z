@@ -41,10 +41,11 @@ async def upload(client, message, filepath, user_id):
       mydict = await get_details(filepath)
       await app.send_chat_action(user_id, "upload_video")
       await app.send_video(user_id, filepath,supports_streaming=True,caption=filename,thumb=mydict['tname'],duration=int(float(mydict['duration'])),width=int(mydict['width']),height = int(mydict['height']),progress=progress_for_pyrogram,progress_args=("Upload Status: \n",message,c_time))
+      os.remove(mydict['tname'])
     else:
       await app.send_chat_action(user_id, "upload_document")
       await app.send_document(user_id, filepath,caption=filename,progress=progress_for_pyrogram,progress_args=("Upload Status: \n",message,c_time))
-  os.remove(mydict['tname'])
+   
   await app.delete_messages(user_id, message.message_id)
 
 @app.on_message(filters.command(["help"]) & filters.private)
