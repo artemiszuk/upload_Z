@@ -5,6 +5,7 @@ from pyrogram import Client, filters, errors
 from urllib.parse import urlparse
 from pySmartDL import SmartDL
 from plugins.tools import progress, is_url, extension, speedtest_using_cli
+from plugins.progress import progress_for_pyrogram
 import asyncio
 from urllib.parse import unquote
 import subprocess
