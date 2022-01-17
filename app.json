@@ -1,32 +1,37 @@
 {
-	"name": "upload_Z",
-	"description": "A Pyrogram Telegram bot to upload files",
-	"keywords": [
+	"name":"upload_Z",
+	"description":"A Pyrogram Telegram bot to upload files",
+	"keywords":[
 		"telegram",
 		"media"
 	],
-	"repository": "https://github.com/artemiszuk/upload_Z",
-	"success_url": "/",
-	"logo": "https://telegra.ph/file/9d63060a06c6fc6def1da.png",
-	"website": "stream.wrench.gq",
-	"env": {
-		"API_ID": {
-			"description": "Get this value from https://my.telegram.org"
+	"repository":"https://github.com/artemiszuk/upload_Z",
+	"success_url":"/",
+	"logo":"https://telegra.ph/file/9d63060a06c6fc6def1da.png",
+	"website":"stream.wrench.gq",
+	"env":{
+		"API_ID":{
+			"description":"Get this value from https://my.telegram.org"
 		},
-		"API_HASH": {
-			"description": "Get this value from https://my.telegram.org"
+		"API_HASH":{
+			"description":"Get this value from https://my.telegram.org"
 		},
-		"BOT_TOKEN": {
-			"description": "Get this value from @BotFather"
+		"BOT_TOKEN":{
+			"description":"Get this value from @BotFather"
 		}
 	},
-	"buildpacks": [{
-		"url": "heroku/python"
-	}],
-	"formation": {
-		"worker": {
-			"quantity": 1,
-			"size": "free"
+	"buildpacks":[
+		{
+			"url":"heroku/python"
+		},
+		{
+			"url":"https://github.com/jonathanong/heroku-buildpack-ffmpeg latest.git"
+		}
+	],
+	"formation":{
+		"worker":{
+			"quantity":1,
+			"size":"free"
 		}
 	}
 }
