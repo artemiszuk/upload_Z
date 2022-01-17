@@ -42,6 +42,10 @@ async def upload(client, message, filepath, user_id):
       await app.send_chat_action(user_id, "upload_video")
       await app.send_video(user_id, filepath,supports_streaming=True,caption=filename,thumb=mydict['tname'],duration=int(float(mydict['duration'])),width=int(mydict['width']),height = int(mydict['height']),progress=progress_for_pyrogram,progress_args=("Upload Status: \n",message,c_time))
       os.remove(mydict['tname'])
+    elif (exten == '.mp4' or exten == '.mkv'):
+    	mydict = await get_details(filepath)
+    	await app.send_chat_action(user_id, "upload_document")
+        await app.send_document(user_id, filepath,caption=filename,thumb=mydict['tname'],progress=progress_for_pyrogram,progress_args=("Upload Status: \n",message,c_time)
     else:
       await app.send_chat_action(user_id, "upload_document")
       await app.send_document(user_id, filepath,caption=filename,progress=progress_for_pyrogram,progress_args=("Upload Status: \n",message,c_time))
