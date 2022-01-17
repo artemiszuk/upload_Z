@@ -22,6 +22,7 @@ app = Client("account", api_id=api_id, api_hash=api_hash, bot_token=bot_token)
 
 
 async def upload(client, message, filepath, user_id):
+  c_time= time.time()
   global upload_as_doc
   global tdict
   filename = os.path.basename(filepath)
@@ -33,14 +34,14 @@ async def upload(client, message, filepath, user_id):
       await app.send_video(user_id, filepath,supports_streaming=False,caption=filename,thumb=str(tdict[user_id]))
     else:
       await app.send_chat_action(user_id, "upload_document")
-      await app.send_document(user_id, filepath,caption=filename,thumb=str(tdict[user_id]))
+      await app.send_document(user_id, filepath,caption=filename,thumb=str(tdict[user_id],progress=progress_for_pyrogram,progress_args=("Upload Status: \n",message,c_time)))
   else:
     if upload_as_doc == False  and (exten == '.mp4' or exten == '.mkv'):
       await app.send_chat_action(user_id, "upload_video")
       await app.send_video(user_id, filepath,supports_streaming=False,caption=filename)
     else:
       await app.send_chat_action(user_id, "upload_document")
-      await app.send_document(user_id, filepath,caption=filename)
+      await app.send_document(user_id, filepath,caption=filename,progress=progress_for_pyrogram,progress_args=("Upload Status: \n",message,c_time))
   await app.delete_messages(user_id, message.message_id)
 
 @app.on_message(filters.command(["help"]) & filters.private)
