@@ -3,3 +3,4 @@ tgcrypto
 pySmartDL
 requests
 speedtest-cli
+ffmpeg-python

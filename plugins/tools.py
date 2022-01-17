@@ -1,7 +1,9 @@
 from urllib.parse import urlparse
 import pathlib
 import subprocess
- 
+import os
+import random
+import ffmpeg
 
 def speedtest_using_cli():
   process = subprocess.Popen("speedtest-cli --simple",shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
@@ -27,3 +29,21 @@ def progress(current,total):
       else:
           bar += "░"
   return f"[{bar}]"
+
+async def get_details(filepath):
+    mydict = dict()
+    probe = ffmpeg.probe(filepath)
+    video_stream = next((stream for stream in probe['streams'] if stream['codec_type'] == 'video'), None)
+    mydict['width'] = int(video_stream['width'])
+    mydict['height'] = int(video_stream['height'])
+    mydict['duration'] = probe['format']['duration']
+    filename = os.path.basename(filepath)
+    mydict['tname'] = filename[0:filename.index(".")] + ".jpeg"
+    (
+      ffmpeg
+      .input(filepath, ss=random.randrange(0,int(float(mydict['duration']))))
+      .filter('scale', mydict['width'], -1)
+      .output(mydict['tname'], vframes=1)
+      .run()
+    )
+    return mydict

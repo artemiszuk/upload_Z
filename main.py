@@ -4,7 +4,7 @@ import shutil
 from pyrogram import Client, filters, errors
 from urllib.parse import urlparse
 from pySmartDL import SmartDL
-from plugins.tools import progress, is_url, extension, speedtest_using_cli
+from plugins.tools import progress, is_url, extension, speedtest_using_cli , get_details
 from plugins.progress import progress_for_pyrogram
 import asyncio
 from urllib.parse import unquote
@@ -21,7 +21,6 @@ bot_token = os.environ.get('BOT_TOKEN')
 app = Client("account", api_id=api_id, api_hash=api_hash, bot_token=bot_token)
 
 
-
 async def upload(client, message, filepath, user_id):
   c_time= time.time()
   global upload_as_doc
@@ -31,18 +30,21 @@ async def upload(client, message, filepath, user_id):
   await app.edit_message_text(user_id, message.message_id ,                              f"Uploading {filename}...")
   if(user_id in tdict):
     if upload_as_doc == False  and (exten == '.mp4' or exten == '.mkv'):
+      mydict = await get_details(filepath)
       await app.send_chat_action(user_id, "upload_video")
-      await app.send_video(user_id, filepath,supports_streaming=False,caption=filename,thumb=str(tdict[user_id]))
+      await app.send_video(user_id, filepath,supports_streaming=True,caption=filename,thumb=str(tdict[user_id]),duration=int(float(mydict['duration'])),width=int(mydict['width']),height = int(mydict['height']),progress=progress_for_pyrogram,progress_args=("Upload Status: \n",message,c_time))
     else:
       await app.send_chat_action(user_id, "upload_document")
-      await app.send_document(user_id, filepath,caption=filename,thumb=str(tdict[user_id],progress=progress_for_pyrogram,progress_args=("Upload Status: \n",message,c_time)))
+      await app.send_document(user_id, filepath,caption=filename,thumb=str(tdict[user_id]),progress=progress_for_pyrogram,progress_args=("Upload Status: \n",message,c_time))
   else:
     if upload_as_doc == False  and (exten == '.mp4' or exten == '.mkv'):
+      mydict = await get_details(filepath)
       await app.send_chat_action(user_id, "upload_video")
-      await app.send_video(user_id, filepath,supports_streaming=False,caption=filename)
+      await app.send_video(user_id, filepath,supports_streaming=True,caption=filename,thumb=mydict['tname'],duration=int(float(mydict['duration'])),width=int(mydict['width']),height = int(mydict['height']),progress=progress_for_pyrogram,progress_args=("Upload Status: \n",message,c_time))
     else:
       await app.send_chat_action(user_id, "upload_document")
       await app.send_document(user_id, filepath,caption=filename,progress=progress_for_pyrogram,progress_args=("Upload Status: \n",message,c_time))
+  os.remove(mydict['tname'])
   await app.delete_messages(user_id, message.message_id)
 
 @app.on_message(filters.command(["help"]) & filters.private)
@@ -93,7 +95,7 @@ def speedtest(client, message):
   text = speedtest_using_cli()
   message.edit_text(f"**Speedtest Results :**\n\n{text}")
   
-'''#on getting toggle msg
+#on getting toggle msg
 @app.on_message(filters.command(["toggle"]) & filters.private)
 async def toggle(client, message):
   global upload_as_doc
@@ -104,7 +106,7 @@ async def toggle(client, message):
   if upload_as_doc: text += "**Document**"
   else: text += "**Streamable**"
   await app.send_message(user_id, text)
-'''
+
 #on getting link msg
 @app.on_message(filters.command(["upload"]) & filters.private)
 async def link(client, message):
