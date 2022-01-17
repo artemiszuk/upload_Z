@@ -6,7 +6,7 @@ This is Simple Upload bot written from scratch by me (may contain bugs as I am S
 • uses pySmartDL to download files \
 • Perform SpeedTest using speedtest-cli module \
 • Custom Thumbnail \
-• Download Progress & ETA (upload progress will be added later) \
+• Download Progress / Upload Progress & ETA  \
 • Download File from Direct Link and upload as Document \
 • more soon... 
 
