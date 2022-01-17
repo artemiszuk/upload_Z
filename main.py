@@ -8,7 +8,7 @@ from plugins.tools import progress, is_url, extension, speedtest_using_cli
 import asyncio
 from urllib.parse import unquote
 import subprocess
-
+import time
 tdict = dict()
 upload_as_doc = True
 #from pyrogram.types import ReplyKeyboardMarkup, InlineKeyboardMarkup, InlineKeyboardButton

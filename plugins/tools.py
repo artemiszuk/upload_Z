@@ -23,7 +23,7 @@ def progress(current,total):
   current = int(current/10)
   for i in range(0,10):
       if(i < current):
-          bar += "■" 
+          bar += "█" 
       else:
-          bar += "□"
+          bar += "░"
   return f"[{bar}]"
