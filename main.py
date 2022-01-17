@@ -6,6 +6,7 @@ from urllib.parse import urlparse
 from pySmartDL import SmartDL
 from plugins.tools import progress, is_url, extension, speedtest_using_cli
 import asyncio
+from urllib.parse import unquote
 import subprocess
 
 tdict = dict()
@@ -26,7 +27,7 @@ async def upload(client, message, filepath, user_id):
   filename = os.path.basename(filepath)
   exten = extension(filepath)
   await app.edit_message_text(user_id, message.message_id ,                              f"Uploading {filename}...")
-  if(tdict[user_id]):
+  if(user_id in tdict):
     if upload_as_doc == False  and (exten == '.mp4' or exten == '.mkv'):
       await app.send_chat_action(user_id, "upload_video")
       await app.send_video(user_id, filepath,supports_streaming=False,caption=filename,thumb=str(tdict[user_id]))
@@ -131,7 +132,7 @@ async def link(client, message):
           prg = progress(int(percentage),100)
           speed = downloader.get_speed(human=True)
           eta_time = downloader.get_eta(human=True)
-          progress_str = f"File Name : {file_name} \n" +f"Progress : {prg}\n" +"Completed : " + str(int(percentage)) +"%\n" + f"Speed : {speed}\n" + f"ETA : {eta_time}"
+          progress_str = f"File Name : {unquote(file_name)} \n" +f"Progress : {prg}\n" +"Completed : " + str(int(percentage)) +"%\n" + f"Speed : {speed}\n" + f"ETA : {eta_time}"
           await app.edit_message_text(user_id, bot_msg.message_id , f"{progress_str}")
           await asyncio.sleep(3)
         await app.edit_message_text(user_id, bot_msg.message_id , "File Downloaded")
