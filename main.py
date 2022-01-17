@@ -84,7 +84,7 @@ async def thumb(client, message):
   user_id = message.chat.id
   global tdict
   if(user_id in tdict):
-    tdict[user_id] = ""
+    tdict.pop(user_id)
     shutil.rmtree(f"downloads/{user_id}/")
     await message.reply_text("Thumbnail Cleared")
   else :
