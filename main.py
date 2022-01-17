@@ -46,7 +46,7 @@ async def upload(client, message, filepath, user_id):
     	mydict = await get_details(filepath)
     	await app.send_chat_action(user_id, "upload_document")
     	await app.send_document(user_id, filepath,caption=filename,thumb=mydict['tname'],progress=progress_for_pyrogram,progress_args=("Upload Status: \n",message,c_time))
-        os.remove(mydict['tname'])
+    	os.remove(mydict['tname'])
     else:
       await app.send_chat_action(user_id, "upload_document")
       await app.send_document(user_id, filepath,caption=filename,progress=progress_for_pyrogram,progress_args=("Upload Status: \n",message,c_time))
