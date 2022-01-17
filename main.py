@@ -9,7 +9,7 @@ import asyncio
 import subprocess
 
 tdict = dict()
-upload_as_doc = False
+upload_as_doc = True
 #from pyrogram.types import ReplyKeyboardMarkup, InlineKeyboardMarkup, InlineKeyboardButton
 
 
