@@ -2,3 +2,4 @@ pyrogram
 tgcrypto
 pySmartDL
 requests
+speedtest-cli
