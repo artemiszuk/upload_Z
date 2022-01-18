@@ -7,6 +7,7 @@ This is Simple Upload bot written from scratch by me (may contain bugs as I am S
 • Perform SpeedTest using speedtest-cli module \
 • Custom Thumbnail \
 • Download Progress / Upload Progress & ETA  \
+• Toggle for uploading videos as document/video \
 • Download File from Direct Link and upload as Document \
 • more soon... 
 
