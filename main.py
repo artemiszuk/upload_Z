@@ -55,7 +55,7 @@ async def upload(client, message, filepath, user_id):
 
 @app.on_message(filters.command(["help"]) & filters.private)
 async def help(client, message):
-  text = "/start : Check Alive Status \n/upload : Upload DIrect Links \n/thumb : Reply to photo to save as custom thumb \n/clrthumb : Clear Custom ThumbNail \n/speedtest: Check DL and UL Speed"
+  text = "/start : Check Alive Status \n/upload : Upload DIrect Links \n/thumb : Reply to photo to save as custom thumb \n/clrthumb : Clear Custom ThumbNail \n/toggle : Upload videos as streamable/document\n/speedtest: Check DL and UL Speed"
   await app.send_message(message.chat.id, text)
 
 #on getting start msg
