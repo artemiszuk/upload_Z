@@ -68,21 +68,16 @@ async def start(client, message):
 @app.on_message(filters.command(["thumb"]) & filters.private)
 async def thumb(client, message):
   global tdict
-  try:
-    photo = message.reply_to_message
+  photo_msg = message.reply_to_message
+  if (photo_msg is not None and photo_msg.photo is not None ):
     photo_dl_path = f"downloads/{message.chat.id}/"
-    await photo.download(file_name = photo_dl_path)
+    await photo_msg.download(file_name = photo_dl_path)
     f = []      
     for file in os.listdir(f"{photo_dl_path}"):f.append(str(file))
-    p_ext = extension(f"photo_dl_path/{f[-1]}")
-    allowed = [".jpeg",".jpg"]
-    if p_ext not in allowed :
-      await message.reply_text("Only jpeg photos can be used")
-      return
     tdict[message.chat.id] = f"{photo_dl_path}/{f[-1]}"
-    await message.reply_text(f"Custom Thumb Saved",reply_to_message_id=photo.message_id,quote=True) 
-  except Exception as e:
-    await message.reply_text(f"SomeThing Went Wrong ! Check Input")
+    await message.reply_text(f"Custom Thumb Saved",reply_to_message_id=photo_msg.message_id,quote=True) 
+  else:
+    await message.reply_text(f"Not a Photo",quote=True)
 
 @app.on_message(filters.command(["clrthumb"]) & filters.private)
 async def thumb(client, message):
