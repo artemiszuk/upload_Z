@@ -1,5 +1,5 @@
 .replit
-plugins/__pycache__
-accounts.session
+plugins/__pycache__/
+account.session
 download
 test.py
