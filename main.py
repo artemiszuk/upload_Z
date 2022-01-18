@@ -3,11 +3,9 @@ import os
 import shutil
 from pyrogram import Client, filters, errors
 from urllib.parse import urlparse
-from pySmartDL import SmartDL
-from plugins.tools import progress, is_url, extension, speedtst , get_details
-from plugins.progress import progress_for_pyrogram
+from plugins.tools import progress, is_url, extension, speedtst , get_details, dl_link
+from plugins.progress import progress_for_pyrogram, humanbytes
 import asyncio
-from urllib.parse import unquote
 import subprocess
 import time
 tdict = dict()
@@ -109,59 +107,8 @@ async def toggle(client, message):
 #on getting link msg
 @app.on_message(filters.command(["upload"]) & filters.private)
 async def link(client, message):
-    user_id = message.chat.id
-    if os.path.isdir(f"download/{user_id}"):
-        await app.send_message(user_id,
-                         "Please wait for previous task to complete...")
-        return
-    global filepath
-    url = message.text[8:len(message.text)]  #seperate link from message
-    if(is_url(url) == False):
-      await app.send_message(user_id, "Please enter valid url")
-      return
-    text = f"Checking url..."
-    bot_msg = await app.send_message(user_id, text,
-                     disable_web_page_preview=True)  #displays user input
-    await app.edit_message_text(user_id,bot_msg.message_id, "File Downloading")
-    path = f"download/{user_id}/{message.message_id}"
-    if os.path.isdir(f"download/{user_id}") == False:
-      try:
-        os.makedirs(path)
-        downloader = SmartDL(url, path, progress_bar=False)
-        downloader.start(blocking=False)
-        file_name = os.path.basename(url)
-        while not downloader.isFinished():
-          percentage = downloader.get_progress() * 100
-          prg = progress(int(percentage),100)
-          speed = downloader.get_speed(human=True)
-          eta_time = downloader.get_eta(human=True)
-          progress_str = f"File Name : {unquote(file_name)} \n" +f"Progress : {prg}\n" +"Completed : " + str(int(percentage)) +"%\n" + f"Speed : {speed}\n" + f"ETA : {eta_time}"
-          await app.edit_message_text(user_id, bot_msg.message_id , f"{progress_str}")
-          await asyncio.sleep(3)
-        await app.edit_message_text(user_id, bot_msg.message_id , "File Downloaded")
-        f = []
-        for file in os.listdir(f"{path}"):
-            f.append(
-                file
-            )  #  will make a list of all files downloaded according to user_id
-        filepath = f"{path}/{f[0]}"
-        await upload(client, bot_msg, filepath, user_id)
-        filepath = f"download/{user_id}/"
-        shutil.rmtree(filepath) #remove user_id folder from downloads
-      except errors.MessageNotModified:
-        while not downloader.isFinished(): pass
-        f = []
-        for file in os.listdir(f"{path}"): f.append(file)
-        filepath = f"{path}/{f[0]}"
-        print(filepath)
-        await upload(client, bot_msg, filepath, user_id)
-        filepath = f"download/{user_id}/"
-        shutil.rmtree(filepath)
-      except Exception as e:
-        e_text = str(e)
-        shutil.rmtree(f"download/{user_id}/")
-        await app.delete_messages(user_id, bot_msg.message_id )
-        await app.send_message(user_id, e_text)
-
-
+  filepath,bot_msg = await dl_link(app,message)
+  if(len(filepath)!= 0):
+    await upload(client, bot_msg, filepath, message.chat.id)
+    shutil.rmtree(f"download/{message.chat.id}/")
 app.run()

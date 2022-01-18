@@ -1,3 +1,5 @@
-run.sh
+.replit
+plugins/__pycache__
 accounts.session
 download
+test.py

@@ -1,11 +1,18 @@
 from urllib.parse import urlparse
 import pathlib
 import subprocess
+from pyrogram import Client, filters, errors
 import os
+import shutil
 import random
 import ffmpeg
 import speedtest
 import wget
+import asyncio
+
+from pySmartDL import SmartDL
+from urllib.parse import unquote
+from plugins.progress import humanbytes
 
 async def speedtst(client, message):
   message =  await message.reply_text(f"Performing Speedtest ...")
@@ -24,6 +31,51 @@ async def speedtst(client, message):
   await message.reply_photo(photo=path)
   await message.delete()
   os.remove(path)
+
+async def dl_link(app,message):
+  user_id = message.chat.id
+  if os.path.isdir(f"download/{user_id}"):
+      bot_msg = await app.send_message(user_id,
+                        "Please wait for previous task to complete...")
+      return "",bot_msg
+  url = message.text[8:len(message.text)]  #seperate link from message
+  if(is_url(url) == False):
+    bot_msg = await app.send_message(user_id, "Please enter valid url")
+    return "",bot_msg
+  text = f"Checking url..."
+  bot_msg = await app.send_message(user_id, text,
+                    disable_web_page_preview=True)  #displays user input
+  await app.edit_message_text(user_id,bot_msg.message_id, "File Downloading")
+  path = f"download/{user_id}/{message.message_id}"
+  if os.path.isdir(f"download/{user_id}") == False:
+    try:
+      os.makedirs(path)
+      downloader = SmartDL(url, path, progress_bar=False)
+      downloader.start(blocking=False)
+      file_name = os.path.basename(url)
+      while not downloader.isFinished():
+        percentage = downloader.get_progress() * 100
+        prg = progress(int(percentage),100)
+        speed = downloader.get_speed(human=True)
+        eta_time = downloader.get_eta(human=True)
+        progress_str = f"File Name : {unquote(file_name)} \n" +f"Progress : {prg}\n" +"Completed : " + str(int(percentage)) +"%\n" + f"Speed : {speed}\n" + f"ETA : {eta_time}"
+        await app.edit_message_text(user_id, bot_msg.message_id , f"{progress_str}")
+        await asyncio.sleep(3)
+      await app.edit_message_text(user_id, bot_msg.message_id , "File Downloaded")
+      f = os.listdir(path)
+      filepath = f"{path}/{f[0]}"
+      return filepath,bot_msg
+    except errors.MessageNotModified:
+      while not downloader.isFinished(): pass
+      f = os.listdir(path)
+      filepath = f"{path}/{f[0]}"
+      return filepath,bot_msg
+    except Exception as e:
+      e_text = str(e)
+      shutil.rmtree(f"download/{user_id}/")
+      await bot_msg.edit_text(e_text)
+      return "",bot_msg
+
 
 def extension(fpath):
   return str(pathlib.Path(fpath).suffix)
