@@ -4,7 +4,7 @@ import shutil
 from pyrogram import Client, filters, errors
 from urllib.parse import urlparse
 from pySmartDL import SmartDL
-from plugins.tools import progress, is_url, extension, speedtest_using_cli , get_details
+from plugins.tools import progress, is_url, extension, speedtst , get_details
 from plugins.progress import progress_for_pyrogram
 import asyncio
 from urllib.parse import unquote
@@ -96,10 +96,8 @@ async def thumb(client, message):
     await message.reply_text("No Custom Thumbnail Found")
 
 @app.on_message(filters.command(["speedtest"]) & filters.private)
-def speedtest(client, message):
-  message =  message.reply_text(f"Performing Speedtest ...")
-  text = speedtest_using_cli()
-  message.edit_text(f"**Speedtest Results :**\n\n{text}")
+async def speedtest_cmd(client, message):
+  await speedtst(client, message)
   
 #on getting toggle msg
 @app.on_message(filters.command(["toggle"]) & filters.private)

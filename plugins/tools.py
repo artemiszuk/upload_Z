@@ -4,11 +4,26 @@ import subprocess
 import os
 import random
 import ffmpeg
+import speedtest
+import wget
 
-def speedtest_using_cli():
-  process = subprocess.Popen("speedtest-cli --simple",shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-  stdout, stderr = process.communicate()
-  return stdout.decode('utf-8')
+async def speedtst(client, message):
+  message =  await message.reply_text(f"Performing Speedtest ...")
+  try:
+      test = speedtest.Speedtest()
+      test.get_best_server()
+      await message.edit_text("`Performing download test . . .`")
+      test.download()
+      await message.edit_text("`Performing upload test . . .`")
+      test.upload()
+      test.results.share()
+      result = test.results.dict()
+  except Exception as e:
+      await message.edit_text(f"{str(e)}")
+  path = wget.download((result['share']))
+  await message.reply_photo(photo=path)
+  await message.delete()
+  os.remove(path)
 
 def extension(fpath):
   return str(pathlib.Path(fpath).suffix)

@@ -4,3 +4,4 @@ pySmartDL
 requests
 speedtest-cli
 ffmpeg-python
+wget
