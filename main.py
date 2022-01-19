@@ -29,6 +29,7 @@ class messageobj:
 async def upload_folder(app,path,user_id):
   if os.path.isdir(path) and len(os.listdir(path)) > 0 :
     allfiles = os.listdir(path)
+    allfiles.sort()
     info = await app.send_message(user_id,f"Currently in Folder : __{os.path.basename(path)}__\nTotal Files : {len(allfiles)}")
     await asyncio.sleep(3)
     await info.delete()
