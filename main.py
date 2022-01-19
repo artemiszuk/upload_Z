@@ -8,8 +8,10 @@ from plugins.progress import progress_for_pyrogram, humanbytes
 import asyncio
 import subprocess
 import time
+from collections import deque
 tdict = dict()
 upload_as_doc = True
+q_link = []
 #from pyrogram.types import ReplyKeyboardMarkup, InlineKeyboardMarkup, InlineKeyboardButton
 
 
@@ -17,6 +19,10 @@ api_id = int(os.environ.get('API_ID'))
 api_hash = os.environ.get('API_HASH')
 bot_token = os.environ.get('BOT_TOKEN')
 app = Client("account", api_id=api_id, api_hash=api_hash, bot_token=bot_token)
+
+class messageobj: 
+    def __init__(self, message): 
+        self.message = message 
 
 
 async def upload(client, message, filepath, user_id):
@@ -107,8 +113,26 @@ async def toggle(client, message):
 #on getting link msg
 @app.on_message(filters.command(["upload"]) & filters.private)
 async def link(client, message):
-  filepath,bot_msg = await dl_link(app,message)
-  if(len(filepath)!= 0):
-    await upload(client, bot_msg, filepath, message.chat.id)
-    shutil.rmtree(f"download/{message.chat.id}/")
+  user_id = message.chat.id
+  global q_link
+  q_link.append(messageobj(message))
+  if os.path.isdir(f"download/{user_id}") and len(q_link)>1:
+      queue_msg = await app.send_message(user_id,f"Queue Added\nPENDING TASKS :{str(len(q_link)-1)}")
+      await asyncio.sleep(5)
+      await queue_msg.delete()
+      return
+  while len(q_link[:]) > 0 :
+    obj = q_link[0]
+    print("Download task is started ,size of Queue= ",len(q_link))
+    try:
+      filepath,bot_msg = await dl_link(app,obj.message)
+    except Exception as e:
+      q_link.pop(0)
+      return
+    if(len(filepath)!= 0):
+      await upload(client, bot_msg, filepath, obj.message.chat.id)
+      shutil.rmtree(f"download/{obj.message.chat.id}/")
+    q_link.pop(0)
+    print("Download Task is Done ,size of Queue = ",len(q_link))
+
 app.run()

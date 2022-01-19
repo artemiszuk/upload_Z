@@ -34,31 +34,33 @@ async def speedtst(client, message):
 
 async def dl_link(app,message):
   user_id = message.chat.id
-  if os.path.isdir(f"download/{user_id}"):
+  '''if os.path.isdir(f"download/{user_id}"):
       bot_msg = await app.send_message(user_id,
-                        "Please wait for previous task to complete...")
-      return "",bot_msg
+                        "Queue Added")
+      return "",bot_msg'''
   url = message.text[8:len(message.text)]  #seperate link from message
-  if(is_url(url) == False):
-    bot_msg = await app.send_message(user_id, "Please enter valid url")
+  if(len(url) == 0):
+    bot_msg = await app.send_message(user_id, "Enter URL along with command")
     return "",bot_msg
   text = f"Checking url..."
   bot_msg = await app.send_message(user_id, text,
                     disable_web_page_preview=True)  #displays user input
-  await app.edit_message_text(user_id,bot_msg.message_id, "File Downloading")
   path = f"download/{user_id}/{message.message_id}"
   if os.path.isdir(f"download/{user_id}") == False:
     try:
+      await bot_msg.edit_text("File Downloading")
       os.makedirs(path)
       downloader = SmartDL(url, path, progress_bar=False)
       downloader.start(blocking=False)
       file_name = os.path.basename(url)
       while not downloader.isFinished():
+        total_length = downloader.filesize if downloader.filesize else 0
+        downloaded = downloader.get_dl_size()
         percentage = downloader.get_progress() * 100
         prg = progress(int(percentage),100)
         speed = downloader.get_speed(human=True)
         eta_time = downloader.get_eta(human=True)
-        progress_str = f"File Name : {unquote(file_name)} \n" +f"Progress : {prg}\n" +"Completed : " + str(int(percentage)) +"%\n" + f"Speed : {speed}\n" + f"ETA : {eta_time}"
+        progress_str = f"File Name : {unquote(file_name)} \n" +f"Progress : {prg}\n"+f"{humanbytes(downloaded)} of {humanbytes(total_length)}\n" +"Completed : " + str(int(percentage)) +"%\n" + f"Speed : {speed}\n" + f"ETA : {eta_time}"
         await app.edit_message_text(user_id, bot_msg.message_id , f"{progress_str}")
         await asyncio.sleep(3)
       await app.edit_message_text(user_id, bot_msg.message_id , "File Downloaded")
@@ -73,8 +75,9 @@ async def dl_link(app,message):
     except Exception as e:
       e_text = str(e)
       shutil.rmtree(f"download/{user_id}/")
-      await bot_msg.edit_text(e_text)
-      return "",bot_msg
+      print(e_text)
+      await bot_msg.edit_text("Some Error Occcured,Can't Download ")
+      return 
 
 
 def extension(fpath):
