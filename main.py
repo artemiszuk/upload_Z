@@ -8,10 +8,12 @@ from plugins.progress import progress_for_pyrogram, humanbytes
 import asyncio
 import subprocess
 import time
-from collections import deque
+from patoolib import extract_archive
+
 tdict = dict()
 upload_as_doc = True
 q_link = []
+q_link_zip = []
 #from pyrogram.types import ReplyKeyboardMarkup, InlineKeyboardMarkup, InlineKeyboardButton
 
 
@@ -24,8 +26,37 @@ class messageobj:
     def __init__(self, message): 
         self.message = message 
 
+async def upload_folder(app,path,user_id):
+  if os.path.isdir(path) and len(os.listdir(path)) > 0 :
+    allfiles = os.listdir(path)
+    info = await app.send_message(user_id,f"Currently in Folder : __{os.path.basename(path)}__\nTotal Files : {len(allfiles)}")
+    await asyncio.sleep(3)
+    await info.delete()
+    #print("Total files",len(allfiles),"allfiles = ",allfiles)
+    for flist in allfiles:
+      npath = os.path.join(path,flist)
+      await upload_folder(app,npath,user_id)
+  else:
+    await asyncio.sleep(3) 
+    bot_msg = await app.send_message(user_id,"Trying to Upload...")
+    await upload(bot_msg,path,user_id)
 
-async def upload(client, message, filepath, user_id):
+async def unzip_and_upload(bot_msg,filepath,user_id):
+  new_dir = filepath[0:filepath.index(extension(filepath))] + "/"
+  os.makedirs(new_dir)
+  try:
+    extract_archive(filepath,outdir=new_dir)
+  except Exception as e:
+    e_text = str(e)
+    await bot_msg.edit_text(e_text)
+    return
+  else:
+    await bot_msg.delete()
+    await asyncio.sleep(3)
+    await upload_folder(app,new_dir,user_id)
+
+
+async def upload(message, filepath, user_id):
   c_time= time.time()
   global upload_as_doc
   global tdict
@@ -56,6 +87,37 @@ async def upload(client, message, filepath, user_id):
       await app.send_document(user_id, filepath,caption=filename,progress=progress_for_pyrogram,progress_args=("Upload Status: \n",message,c_time))
    
   await app.delete_messages(user_id, message.message_id)
+
+
+@app.on_message(filters.command(["unzip"]) & filters.private)
+async def unzip_cmd(client, message):
+  user_id = message.chat.id
+  global q_link_zip
+  archives = [".zip",".rar"]
+  if extension(message.text) not in archives:
+    await message.reply_text("Not A Zip/Rar Link")
+    return
+  q_link_zip.append(messageobj(message))
+  if os.path.isdir(f"download/{user_id}") and len(q_link_zip)>1:
+      queue_msg = await app.send_message(user_id,f"Queue Added\nPENDING TASKS :{str(len(q_link_zip)-1)}")
+      await asyncio.sleep(5)
+      await queue_msg.delete()
+      return
+  while len(q_link_zip[:]) > 0 :
+    obj = q_link_zip[0]
+    print("Download task is started ,size of Queue= ",len(q_link_zip))
+    try:
+      filepath,bot_msg = await dl_link(app,obj.message)
+    except Exception as e:
+      q_link_zip.pop(0)
+      return
+    if(len(filepath)!= 0):
+      await bot_msg.edit_text("__Extracting Archive..__")
+      await asyncio.sleep(3)
+      await unzip_and_upload(bot_msg,filepath, obj.message.chat.id)
+      shutil.rmtree(f"download/{obj.message.chat.id}/")
+    q_link_zip.pop(0)
+    print("Download Task is Done ,size of Queue = ",len(q_link_zip))
 
 @app.on_message(filters.command(["help"]) & filters.private)
 async def help(client, message):
@@ -130,7 +192,7 @@ async def link(client, message):
       q_link.pop(0)
       return
     if(len(filepath)!= 0):
-      await upload(client, bot_msg, filepath, obj.message.chat.id)
+      await upload(bot_msg, filepath, obj.message.chat.id)
       shutil.rmtree(f"download/{obj.message.chat.id}/")
     q_link.pop(0)
     print("Download Task is Done ,size of Queue = ",len(q_link))

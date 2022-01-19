@@ -1,5 +1,5 @@
 .replit
-plugins/__pycache__/
+**/pycache/
 account.session
 account.session-journal
 download/

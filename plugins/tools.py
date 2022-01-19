@@ -32,13 +32,15 @@ async def speedtst(client, message):
   await message.delete()
   os.remove(path)
 
+
+
 async def dl_link(app,message):
   user_id = message.chat.id
   '''if os.path.isdir(f"download/{user_id}"):
       bot_msg = await app.send_message(user_id,
                         "Queue Added")
       return "",bot_msg'''
-  url = message.text[8:len(message.text)]  #seperate link from message
+  url = message.text.split()[-1]  #seperate link from message
   if(len(url) == 0):
     bot_msg = await app.send_message(user_id, "Enter URL along with command")
     return "",bot_msg
