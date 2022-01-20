@@ -11,7 +11,7 @@ import time
 from patoolib import extract_archive
 tdict = dict()
 upload_as_doc = dict()
-q_link = []
+q_link = dict()
 from pyrogram.types import ReplyKeyboardMarkup, InlineKeyboardMarkup, InlineKeyboardButton,  CallbackQuery
 
 
@@ -180,20 +180,21 @@ async def toggle(client, message):
 async def link(client, message,unzipflag = False):
   user_id = message.chat.id
   global q_link
-  q_link.append(messageobj(message))
-  q_link[-1].unzip = unzipflag
-  if os.path.isdir(f"download/{user_id}") and len(q_link)>1:
-      queue_msg = await app.send_message(user_id,f"Queue Added\nPENDING TASKS :{str(len(q_link)-1)}")
+  if user_id not in q_link : q_link[user_id] = []
+  q_link[user_id].append(messageobj(message))
+  q_link[user_id][-1].unzip = unzipflag
+  if os.path.isdir(f"download/{user_id}") and len(q_link[user_id])>1:
+      queue_msg = await app.send_message(user_id,f"Queue Added\nPENDING TASKS :{str(len(q_link[user_id])-1)}")
       await asyncio.sleep(5)
       await queue_msg.delete()
       return
-  while len(q_link[:]) > 0 :
-    obj = q_link[0]
-    print("Download task is started ,size of Queue= ",len(q_link))
+  while len(q_link[user_id][:]) > 0 :
+    obj = q_link[user_id][0]
+    print("Download task is started ,size of Queue= ",len(q_link[user_id]))
     try:
       filepath,bot_msg = await dl_link(app,obj.message)
     except Exception as e:
-      q_link.pop(0)
+      q_link[user_id].pop(0)
       return
     if(len(filepath)!= 0):
       if(obj.unzip):
@@ -201,7 +202,7 @@ async def link(client, message,unzipflag = False):
       else:
         await upload(bot_msg, filepath, obj.message.chat.id)
       shutil.rmtree(f"download/{obj.message.chat.id}/")
-    q_link.pop(0)
-    print("Download Task is Done ,size of Queue = ",len(q_link))
+    q_link[user_id].pop(0)
+    print("Download Task is Done ,size of Queue = ",len(q_link[user_id]))
 
 app.run()
