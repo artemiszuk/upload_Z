@@ -4,7 +4,7 @@ class messageobj:
         self.unzip = unzip
 
 
-class Var(object):
+class Var((object)):
     tdict = dict()
-    upload_as_doc = dict()
-    q_link = dict()
+    upload_as_doc = {}
+    q_link = {}

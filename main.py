@@ -49,7 +49,7 @@ async def upload_folder(app, path, user_id):
 
 
 async def unzip_and_upload(bot_msg, filepath, user_id):
-    new_dir = filepath[0 : filepath.index(extension(filepath))] + "/"
+    new_dir = filepath[:filepath.index(extension(filepath))] + "/"
     os.makedirs(new_dir)
     try:
         extract_archive(filepath, outdir=new_dir)
@@ -73,7 +73,7 @@ async def upload(message, filepath, user_id):
         user_id, message.message_id, f"__Uploading {filename}__ ... 📤"
     )
     if user_id in Var.tdict:
-        if Var.upload_as_doc[user_id] == False and (exten == ".mp4" or exten == ".mkv"):
+        if Var.upload_as_doc[user_id] == False and exten in [".mp4", ".mkv"]:
             mydict = await get_details(filepath)
             await app.send_chat_action(user_id, "upload_video")
             await app.send_video(
@@ -98,44 +98,43 @@ async def upload(message, filepath, user_id):
                 progress=progress_for_pyrogram,
                 progress_args=("Upload Status: \n", message, c_time),
             )
+    elif Var.upload_as_doc[user_id] == False and exten in [".mp4", ".mkv"]:
+        mydict = await get_details(filepath)
+        await app.send_chat_action(user_id, "upload_video")
+        await app.send_video(
+            user_id,
+            filepath,
+            supports_streaming=True,
+            caption=filename,
+            thumb=mydict["tname"],
+            duration=int(float(mydict["duration"])),
+            width=int(mydict["width"]),
+            height=int(mydict["height"]),
+            progress=progress_for_pyrogram,
+            progress_args=("Upload Status: \n", message, c_time),
+        )
+        os.remove(mydict["tname"])
+    elif exten in [".mp4", ".mkv"]:
+        mydict = await get_details(filepath)
+        await app.send_chat_action(user_id, "upload_document")
+        await app.send_document(
+            user_id,
+            filepath,
+            caption=filename,
+            thumb=mydict["tname"],
+            progress=progress_for_pyrogram,
+            progress_args=("Upload Status: \n", message, c_time),
+        )
+        os.remove(mydict["tname"])
     else:
-        if Var.upload_as_doc[user_id] == False and (exten == ".mp4" or exten == ".mkv"):
-            mydict = await get_details(filepath)
-            await app.send_chat_action(user_id, "upload_video")
-            await app.send_video(
-                user_id,
-                filepath,
-                supports_streaming=True,
-                caption=filename,
-                thumb=mydict["tname"],
-                duration=int(float(mydict["duration"])),
-                width=int(mydict["width"]),
-                height=int(mydict["height"]),
-                progress=progress_for_pyrogram,
-                progress_args=("Upload Status: \n", message, c_time),
-            )
-            os.remove(mydict["tname"])
-        elif exten == ".mp4" or exten == ".mkv":
-            mydict = await get_details(filepath)
-            await app.send_chat_action(user_id, "upload_document")
-            await app.send_document(
-                user_id,
-                filepath,
-                caption=filename,
-                thumb=mydict["tname"],
-                progress=progress_for_pyrogram,
-                progress_args=("Upload Status: \n", message, c_time),
-            )
-            os.remove(mydict["tname"])
-        else:
-            await app.send_chat_action(user_id, "upload_document")
-            await app.send_document(
-                user_id,
-                filepath,
-                caption=filename,
-                progress=progress_for_pyrogram,
-                progress_args=("Upload Status: \n", message, c_time),
-            )
+        await app.send_chat_action(user_id, "upload_document")
+        await app.send_document(
+            user_id,
+            filepath,
+            caption=filename,
+            progress=progress_for_pyrogram,
+            progress_args=("Upload Status: \n", message, c_time),
+        )
 
     await app.delete_messages(user_id, message.message_id)
 
@@ -186,15 +185,9 @@ async def button(client, cmd: CallbackQuery):
         await cmd.message.delete()
     elif "toggle" in cb_data:
         user_id = cmd.from_user.id
-        if Var.upload_as_doc[user_id]:
-            Var.upload_as_doc[user_id] = False
-        else:
-            Var.upload_as_doc[user_id] = True
+        Var.upload_as_doc[user_id] = not Var.upload_as_doc[user_id]
         text = "**⚙TOGGLE MENU:**\n[__Click to change__]\n\nVideo File Will be Uploaded as "
-        if Var.upload_as_doc[user_id]:
-            text_append = "Document 📁"
-        else:
-            text_append = "Streamable 🎬"
+        text_append = "Document 📁" if Var.upload_as_doc[user_id] else "Streamable 🎬"
         await cmd.message.edit(
             text,
             reply_markup=InlineKeyboardMarkup(
@@ -248,15 +241,16 @@ async def thumb(client, message):
     if photo_msg is not None and photo_msg.photo is not None:
         photo_dl_path = f"downloads/{message.chat.id}/"
         await photo_msg.download(file_name=photo_dl_path)
-        f = []
-        for file in os.listdir(f"{photo_dl_path}"):
-            f.append(str(file))
+        f = [str(file) for file in os.listdir(f"{photo_dl_path}")]
         Var.tdict[message.chat.id] = f"{photo_dl_path}/{f[-1]}"
         await message.reply_text(
-            f"Custom Thumb Saved", reply_to_message_id=photo_msg.message_id, quote=True
+            'Custom Thumb Saved',
+            reply_to_message_id=photo_msg.message_id,
+            quote=True,
         )
+
     else:
-        await message.reply_text(f"Not a Photo", quote=True)
+        await message.reply_text('Not a Photo', quote=True)
 
 
 @app.on_message(filters.command(["clrthumb"]) & filters.private)
@@ -279,18 +273,12 @@ async def speedtest_cmd(client, message):
 @app.on_message(filters.command(["toggle"]) & filters.private)
 async def toggle(client, message):
     user_id = message.chat.id
-    if user_id in Var.upload_as_doc:
-        if Var.upload_as_doc[user_id]:
-            Var.upload_as_doc[user_id] = False
-        else:
-            Var.upload_as_doc[user_id] = True
-    else:
-        Var.upload_as_doc[user_id] = False
+    Var.upload_as_doc[user_id] = (
+        user_id not in Var.upload_as_doc or not Var.upload_as_doc[user_id]
+    ) and user_id in Var.upload_as_doc
+
     text = "**⚙TOGGLE MENU:**\n[__Click to change__]\n\nVideo File Will be Uploaded as "
-    if Var.upload_as_doc[user_id]:
-        text_append = "Document 📁"
-    else:
-        text_append = "Streamable 🎬"
+    text_append = "Document 📁" if Var.upload_as_doc[user_id] else "Streamable 🎬"
     await app.send_message(
         user_id,
         text,
@@ -315,8 +303,10 @@ async def link(client, message, unzipflag=False):
     Var.q_link[user_id][-1].unzip = unzipflag
     if os.path.isdir(f"download/{user_id}") and len(Var.q_link[user_id]) > 1:
         queue_msg = await app.send_message(
-            user_id, f"Queue Added\nPENDING TASKS :{str(len(Var.q_link[user_id])-1)}"
+            user_id,
+            f'Queue Added\nPENDING TASKS :{len(Var.q_link[user_id]) - 1}',
         )
+
         await asyncio.sleep(5)
         await queue_msg.delete()
         return
