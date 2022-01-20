@@ -41,9 +41,6 @@ async def dl_link(app,message):
                         "Queue Added")
       return "",bot_msg'''
   url = message.text.split()[-1]  #seperate link from message
-  if(len(url) == 0):
-    bot_msg = await app.send_message(user_id, "Enter URL along with command")
-    return "",bot_msg
   text = f"Checking url..."
   bot_msg = await app.send_message(user_id, text,
                     disable_web_page_preview=True)  #displays user input
