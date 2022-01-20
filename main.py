@@ -9,11 +9,10 @@ import asyncio
 import subprocess
 import time
 from patoolib import extract_archive
-
 tdict = dict()
-upload_as_doc = True
+upload_as_doc = dict()
 q_link = []
-#from pyrogram.types import ReplyKeyboardMarkup, InlineKeyboardMarkup, InlineKeyboardButton
+from pyrogram.types import ReplyKeyboardMarkup, InlineKeyboardMarkup, InlineKeyboardButton,  CallbackQuery
 
 
 api_id = int(os.environ.get('API_ID'))
@@ -61,11 +60,12 @@ async def upload(message, filepath, user_id):
   c_time= time.time()
   global upload_as_doc
   global tdict
+  if user_id not in upload_as_doc : upload_as_doc[user_id] = True
   filename = os.path.basename(filepath)
   exten = extension(filepath)
-  await app.edit_message_text(user_id, message.message_id ,                              f"Uploading {filename}...")
+  await app.edit_message_text(user_id, message.message_id ,                              f"__Uploading {filename}__ ... 📤")
   if(user_id in tdict):
-    if upload_as_doc == False  and (exten == '.mp4' or exten == '.mkv'):
+    if upload_as_doc[user_id] == False  and (exten == '.mp4' or exten == '.mkv'):
       mydict = await get_details(filepath)
       await app.send_chat_action(user_id, "upload_video")
       await app.send_video(user_id, filepath,supports_streaming=True,caption=filename,thumb=str(tdict[user_id]),duration=int(float(mydict['duration'])),width=int(mydict['width']),height = int(mydict['height']),progress=progress_for_pyrogram,progress_args=("Upload Status: \n",message,c_time))
@@ -73,7 +73,7 @@ async def upload(message, filepath, user_id):
       await app.send_chat_action(user_id, "upload_document")
       await app.send_document(user_id, filepath,caption=filename,thumb=str(tdict[user_id]),progress=progress_for_pyrogram,progress_args=("Upload Status: \n",message,c_time))
   else:
-    if upload_as_doc == False  and (exten == '.mp4' or exten == '.mkv'):
+    if upload_as_doc[user_id] == False  and (exten == '.mp4' or exten == '.mkv'):
       mydict = await get_details(filepath)
       await app.send_chat_action(user_id, "upload_video")
       await app.send_video(user_id, filepath,supports_streaming=True,caption=filename,thumb=mydict['tname'],duration=int(float(mydict['duration'])),width=int(mydict['width']),height = int(mydict['height']),progress=progress_for_pyrogram,progress_args=("Upload Status: \n",message,c_time))
@@ -98,17 +98,38 @@ async def unzip_cmd(client, message):
     return
   await link(client,message,True)
 
-@app.on_message(filters.command(["help"]) & filters.private)
-async def help(client, message):
-  text = "/start : Check Alive Status \n/upload : Upload DIrect Links \n/thumb : Reply to photo to save as custom thumb \n/clrthumb : Clear Custom ThumbNail \n/toggle : Upload videos as streamable/document\n/speedtest: Check DL and UL Speed"
-  await app.send_message(message.chat.id, text)
 
+@app.on_callback_query()
+async def button(client, cmd: CallbackQuery):
+  cb_data = cmd.data
+  if "help" in cb_data :
+    text = "**HELP MENU**:\n\n/start : Check Alive Status \n/upload : Upload DIrect Links \n/unzip : Unzip zip/rar files from direct Links\n/thumb : Reply to photo to save as custom thumb \n/clrthumb : Clear Custom ThumbNail \n/toggle : Upload videos as streamable/document\n/speedtest: Check DL and UL Speed"  
+    await cmd.message.edit(text,reply_markup=InlineKeyboardMarkup([[InlineKeyboardButton("Back ◀", callback_data="start")]]))
+  elif "start" in cb_data:
+    text = "**MAIN MENU**\n\nHi ! This is Simple File Upload Bot \n\n__Check Below for commands/features__"
+    await cmd.message.edit(text,reply_markup=InlineKeyboardMarkup([[InlineKeyboardButton("Help ❓", callback_data="help"),InlineKeyboardButton("Developer 🧑‍💻", url="https://t.me/SorceryBhai")],[InlineKeyboardButton("Close ❌", callback_data="close"),InlineKeyboardButton("Source Code 📝", url="https://github.com/artemiszuk/upload_Z")]]))
+  elif "close" in cb_data:
+    await cmd.message.delete()
+  elif "toggle" in cb_data:
+    global upload_as_doc
+    user_id = cmd.from_user.id
+    if upload_as_doc[user_id]: upload_as_doc[user_id] = False
+    else : upload_as_doc[user_id] = True
+    text = "**TOGGLE MENU:**\n[__Click to change__]\n\nVideo File Will be Uploaded as "
+    if upload_as_doc[user_id]: text_append = "Document 📁"
+    else: text_append = "Streamable 🎬"
+    await cmd.message.edit(text,reply_markup=InlineKeyboardMarkup([[InlineKeyboardButton(text_append, callback_data="toggle"),InlineKeyboardButton("Close ❌", callback_data="close")]]))
 #on getting start msg
+
 @app.on_message(filters.command(["start"]) & filters.private)
 async def start(client, message):
-    user_id = message.chat.id
-    text = "Hi ! This is Simple File Upload Bot \n\nCheck usage with '/help'"
-    await app.send_message(user_id, text)  #sends above messsage
+    user_id = message.from_user.id
+    text = "**MAIN MENU**\n\nHi ! This is Simple File Upload Bot \n\n__Check Below for commands/features__"
+    await app.send_message(user_id, text, reply_markup=InlineKeyboardMarkup([[InlineKeyboardButton("Help ❓", callback_data="help"),InlineKeyboardButton("Developer 🧑‍💻", url="https://t.me/SorceryBhai")],[InlineKeyboardButton("Close ❌", callback_data="close"),InlineKeyboardButton("Source Code 📝", url="https://github.com/artemiszuk/upload_Z")]]))  #sends above messsage
+
+@app.on_message(filters.command(["help"]) & filters.private)
+async def help(client, message):
+  await start(client, message)
 
 @app.on_message(filters.command(["thumb"]) & filters.private)
 async def thumb(client, message):
@@ -142,14 +163,17 @@ async def speedtest_cmd(client, message):
 #on getting toggle msg
 @app.on_message(filters.command(["toggle"]) & filters.private)
 async def toggle(client, message):
-  global upload_as_doc
-  if upload_as_doc == False: upload_as_doc = True
-  else: upload_as_doc = False
   user_id = message.chat.id
-  text = "Video File Will be Uploaded as "
-  if upload_as_doc: text += "**Document**"
-  else: text += "**Streamable**"
-  await app.send_message(user_id, text)
+  global upload_as_doc
+  if user_id in upload_as_doc : 
+    if upload_as_doc[user_id]: upload_as_doc[user_id] = False
+    else : upload_as_doc[user_id] = True
+  else:
+    upload_as_doc[user_id] = False
+  text = "**TOGGLE MENU:**\n[__Click to change__]\n\nVideo File Will be Uploaded as "
+  if upload_as_doc[user_id]: text_append = "Document 📁"
+  else: text_append = "Streamable 🎬"
+  await app.send_message(user_id, text,reply_markup=InlineKeyboardMarkup([[InlineKeyboardButton(text_append, callback_data="toggle"),InlineKeyboardButton("Close ❌", callback_data="close")]]))
 
 #on getting link msg
 @app.on_message(filters.command(["upload"]) & filters.private)
